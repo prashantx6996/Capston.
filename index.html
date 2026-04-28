@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Water Quality Dashboard</title>
+    <meta name="description" content="Live monitoring of Total Dissolved Solids, Turbidity, and Temperature of water.">
+    
+    <!-- Icons and Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(56, 189, 248, 0.4));">
+                    <defs>
+                        <linearGradient id="dropGrad" x1="12" y1="2" x2="12" y2="24" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#38BDF8" />
+                            <stop offset="1" stop-color="#2563EB" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 2.694l.529.556c0 0 7.47 7.832 7.47 12.25 0 4.418-3.581 8-8 8s-8-3.582-8-8c0-4.418 7.47-12.25 7.47-12.25l.53-.556z" fill="url(#dropGrad)"/>
+                    <path d="M8 15.5c0-2.209 1.79-4 4-4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+                    <circle cx="12" cy="18" r="1.5" fill="#ffffff" opacity="0.8"/>
+                </svg>
+                <span style="font-size: 26px; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(90deg, #FFFFFF, #93C5FD); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: none;">AquaPulse</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active" onclick="switchTab('view-dashboard', this)">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Overview Dashboard</span>
+                </li>
+                <li onclick="switchTab('view-map', this)">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span>Sensors Map</span>
+                </li>
+                <li onclick="switchTab('view-reports', this)">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Reports</span>
+                </li>
+                <li onclick="switchTab('view-settings', this)">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Dashboard -->
+        <main class="main-content">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="nav-view active-view">
+            
+            <!-- Dashboard Header -->
+            <header class="dashboard-header">
+                <div>
+                    <h1>Environmental Dashboard</h1>
+                    <p style="color: var(--text-muted); margin-top: 5px;">Real-time water quality metrics</p>
+                </div>
+                
+                <div class="live-indicator">
+                    <span class="pulse"></span>
+                    <span>System Live</span>
+                </div>
+            </header>
+
+            <!-- Alerts -->
+            <div id="alert-container" class="alert-banner alert-safe">
+                <i class="fa-solid fa-circle-check" id="alert-icon"></i>
+                <div>
+                    <h4 id="alert-title">System Status Normal</h4>
+                    <p id="alert-message" style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Water parameters are well within safe operating limits.</p>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <section class="dashboard-grid">
+                
+                <!-- TDS Card -->
+                <article class="card">
+                    <div class="card-header">
+                        <span class="card-title">Total Dissolved Solids</span>
+                        <div class="card-icon tds">
+                            <i class="fa-solid fa-cubes"></i>
+                        </div>
+                    </div>
+                    <div class="value-container">
+                        <span class="value" id="tds">--</span>
+                        <span class="unit">ppm</span>
+                    </div>
+                    <div class="status-badge" id="tds-status">Loading...</div>
+                </article>
+
+                <!-- Turbidity Card -->
+                <article class="card">
+                    <div class="card-header">
+                        <span class="card-title">Turbidity</span>
+                        <div class="card-icon turb">
+                            <i class="fa-solid fa-water"></i>
+                        </div>
+                    </div>
+                    <div class="value-container">
+                        <span class="value" id="turbidity">--</span>
+                        <span class="unit">NTU</span>
+                    </div>
+                    <div class="status-badge" id="turbidity-status">Loading...</div>
+                </article>
+
+                <!-- Temperature Card -->
+                <article class="card">
+                    <div class="card-header">
+                        <span class="card-title">Water Temperature</span>
+                        <div class="card-icon temp">
+                            <i class="fa-solid fa-temperature-half"></i>
+                        </div>
+                    </div>
+                    <div class="value-container">
+                        <span class="value" id="temp">--</span>
+                        <span class="unit">°C</span>
+                    </div>
+                    <div class="status-badge status-safe" id="temp-status">Normal</div>
+                </article>
+
+            </section>
+
+            <!-- Chart Section -->
+            <section class="chart-section">
+                <div class="chart-header">
+                    <h3>Historical Trend Analysis</h3>
+                    <div style="display:flex; gap: 10px;">
+                        <span style="font-size: 13px; color: var(--text-muted);"><i class="fa-solid fa-circle" style="color: rgba(167, 139, 250, 1);"></i> TDS</span>
+                        <span style="font-size: 13px; color: var(--text-muted);"><i class="fa-solid fa-circle" style="color: rgba(96, 165, 250, 1);"></i> Turbidity</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="qualityChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Historical Daily Readings -->
+            <section class="history-section">
+                <div class="chart-header" style="margin-bottom: 20px;">
+                    <h3>Daily Averages (Last 3 Days)</h3>
+                </div>
+                <div class="history-grid" id="history-container">
+                    <!-- Cards generated by JS -->
+                    <div style="text-align: center; color: var(--text-muted);">Loading historical data...</div>
+                </div>
+            </section>
+            
+            </div> <!-- End Dashboard View -->
+
+            <!-- Map View -->
+            <div id="view-map" class="nav-view" style="display:none;">
+                <header class="dashboard-header" style="margin-bottom: 20px;">
+                    <div><h1>Sensors Map</h1><p style="color:var(--text-muted); margin-top:5px;">Geographic location of water quality sensors</p></div>
+                </header>
+                <div class="card" style="height: 60vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; animation: fadeUp 0.6s ease-out forwards;">
+                    <i class="fa-solid fa-map-location-dot" style="font-size: 50px; color: var(--accent); opacity: 0.8;"></i>
+                    <h3>Interactive Map Integration</h3>
+                    <p style="color: var(--text-muted); text-align: center; max-width: 400px; line-height:1.6;">GPS module currently reporting Latitude: 0.0, Longitude: 0.0.<br>A real-time map API (like Google Maps or Leaflet) will render here when valid coordinates are received from the field sensor.</p>
+                </div>
+            </div>
+
+            <!-- Reports View -->
+            <div id="view-reports" class="nav-view" style="display:none;">
+                <header class="dashboard-header" style="margin-bottom: 20px;">
+                    <div><h1>Data Reports</h1><p style="color:var(--text-muted); margin-top:5px;">Export and analyze historical data</p></div>
+                </header>
+                <div class="card" style="animation: fadeUp 0.6s ease-out forwards;">
+                    <h3 style="margin-bottom: 20px;">Generate Report</h3>
+                    <p style="color:var(--text-muted); margin-bottom: 20px;">Select a timeframe to export sensor data logs.</p>
+                    <div style="display:flex; gap:15px; margin-bottom: 20px; flex-wrap:wrap;">
+                        <select id="report-timeframe" style="padding:12px; border-radius:8px; background:rgba(255,255,255,0.1); color:white; border:1px solid var(--glass-border); outline:none;">
+                            <option value="7" style="color:black;">Last 7 Days</option>
+                            <option value="30" style="color:black;">Last 30 Days</option>
+                            <option value="all" style="color:black;">All Time</option>
+                        </select>
+                        <button id="download-report-btn" onclick="downloadReport()" style="padding:12px 25px; border-radius:8px; background:var(--accent); color:white; border:none; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:8px; transition:0.3s;"><i class="fa-solid fa-download"></i> Download CSV</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="nav-view" style="display:none;">
+                 <header class="dashboard-header" style="margin-bottom: 20px;">
+                    <div><h1>System Settings</h1><p style="color:var(--text-muted); margin-top:5px;">Configuration and alert thresholds</p></div>
+                </header>
+                <div class="card" style="animation: fadeUp 0.6s ease-out forwards;">
+                    <h3 style="margin-bottom: 20px; color:var(--text-main);">Alert Thresholds</h3>
+                    <div style="display:grid; gap:20px; max-width:400px;">
+                        <div>
+                            <label style="color:var(--text-muted); display:block; margin-bottom:8px; font-size:14px;">Maximum Safe TDS (ppm)</label>
+                            <input type="number" value="500" style="width:100%; padding:12px; border-radius:8px; background:rgba(255,255,255,0.1); color:white; border:1px solid var(--glass-border); outline:none;">
+                        </div>
+                        <div>
+                            <label style="color:var(--text-muted); display:block; margin-bottom:8px; font-size:14px;">Maximum Safe Turbidity (NTU)</label>
+                            <input type="number" value="5" style="width:100%; padding:12px; border-radius:8px; background:rgba(255,255,255,0.1); color:white; border:1px solid var(--glass-border); outline:none;">
+                        </div>
+                        <button style="padding:12px 25px; border-radius:8px; background:var(--safe); color:white; border:none; cursor:pointer; font-weight:600; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-save"></i> Save Configuration</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Chart.js & Main Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

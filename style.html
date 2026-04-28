@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Smart Water Quality Monitoring System</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* SAME UI (shortened but modern) */
+body { margin:0; font-family:Poppins, sans-serif; background:#f5f7fb; }
+.container { display:grid; grid-template-columns:250px 1fr; }
+
+.sidebar {
+    background:linear-gradient(#012a4a,#2c7da0);
+    color:white; padding:20px;
+}
+
+.main-content { padding:20px; }
+
+.dashboard-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card {
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.value { font-size:28px; font-weight:bold; }
+
+.status-safe { color:green; }
+.status-warning { color:orange; }
+.status-danger { color:red; }
+
+.chart-container { height:300px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>💧 Water System</h2>
+</div>
+
+<!-- Main -->
+<div class="main-content">
+
+<h2>Live Dashboard</h2>
+
+<div class="dashboard-grid">
+
+<!-- TDS -->
+<div class="card">
+    <h3>TDS</h3>
+    <div class="value" id="tds">--</div>
+    <div id="tds-status"></div>
+</div>
+
+<!-- Turbidity -->
+<div class="card">
+    <h3>Turbidity</h3>
+    <div class="value" id="turbidity">--</div>
+    <div id="turbidity-status"></div>
+</div>
+
+<!-- Temperature -->
+<div class="card">
+    <h3>Temperature</h3>
+    <div class="value" id="temp">--</div>
+</div>
+
+</div>
+
+<!-- Chart -->
+<div class="card" style="margin-top:20px;">
+    <h3>Live Graph</h3>
+    <div class="chart-container">
+        <canvas id="chart"></canvas>
+    </div>
+</div>
+
+<!-- Alerts -->
+<div class="card" style="margin-top:20px;">
+    <h3>Alerts</h3>
+    <div id="alerts">Loading...</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const API = "https://api.thingspeak.com/channels/3319374/feeds.json?api_key=0ZUF9R9I3MC4739H&results=10";
+
+let chart;
+
+function fetchData() {
+    fetch(API)
+    .then(res => res.json())
+    .then(data => {
+
+        const feeds = data.feeds;
+        const latest = feeds[feeds.length - 1];
+
+        const tds = parseFloat(latest.field1) || 0;
+        const turb = parseFloat(latest.field2) || 0;
+        const temp = parseFloat(latest.field3) || 0;
+
+        // Update UI
+        document.getElementById("tds").innerText = tds + " ppm";
+        document.getElementById("turbidity").innerText = turb + " NTU";
+        document.getElementById("temp").innerText = temp + " °C";
+
+        // Status
+        setStatus("tds-status", tds, 500);
+        setStatus("turbidity-status", turb, 5);
+
+        // Alerts
+        checkAlerts(tds, turb);
+
+        // Chart
+        updateChart(feeds);
+
+    });
+}
+
+function setStatus(id, val, limit) {
+    const el = document.getElementById(id);
+
+    if (val > limit) {
+        el.innerText = "Critical";
+        el.className = "status-danger";
+    } else if (val > limit * 0.8) {
+        el.innerText = "Warning";
+        el.className = "status-warning";
+    } else {
+        el.innerText = "Safe";
+        el.className = "status-safe";
+    }
+}
+
+function checkAlerts(tds, turb) {
+    const alert = document.getElementById("alerts");
+
+    if (tds > 500 || turb > 5) {
+        alert.innerHTML = "⚠ Water quality is BAD!";
+    } else {
+        alert.innerHTML = "✅ Water is Safe";
+    }
+}
+
+function updateChart(feeds) {
+
+    const labels = feeds.map(f => new Date(f.created_at).toLocaleTimeString());
+    const tdsData = feeds.map(f => f.field1);
+    const turbData = feeds.map(f => f.field2);
+
+    const ctx = document.getElementById("chart").getContext("2d");
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels,
+            datasets: [
+                { label: "TDS", data: tdsData },
+                { label: "Turbidity", data: turbData }
+            ]
+        }
+    });
+}
+
+// Auto refresh
+setInterval(fetchData, 15000);
+
+// First call
+fetchData();
+</script>
+
+</body>
+</html>
